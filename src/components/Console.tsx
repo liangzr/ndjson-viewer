@@ -160,7 +160,7 @@ const Console = <RecordType extends { time: number }>({ data }: { data: RecordTy
         dataSource={data}
         scroll={{
           x: '100vw',
-          y: 500,
+          y: 'calc(100vh - 400px)',
           scrollToFirstRowOnChange: true,
         }}
       />

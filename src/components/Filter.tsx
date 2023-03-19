@@ -17,7 +17,7 @@ const Filter: React.FC<{
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         placeholder="search with include:, exclude:, and text, separate with newline."
-        autoSize={{ minRows: 2, maxRows: 6 }}
+        rows={3}
       />
     </FilterCard>
   )

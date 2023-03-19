@@ -16,6 +16,7 @@ const LoadProfile: React.FC<{
         <Upload
           showUploadList={false}
           beforeUpload={(file) => {
+            console.log('selected file', file)
             setFile(file)
             onFileChange?.(file)
           }}

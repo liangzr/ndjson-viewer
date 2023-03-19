@@ -27,7 +27,7 @@ function App() {
     reader.readAsText(file)
   }
 
-  console.log(logs)
+  console.log('next', logs)
   const filteredLogs = useMemo(() => {
     if (!searchText) return logs
     const lines = searchText.split('\n')

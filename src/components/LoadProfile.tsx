@@ -1,55 +1,43 @@
-import { Card, Descriptions, Upload } from 'antd'
-import { RcFile } from 'antd/es/upload'
-import React from 'react'
-import styled from 'styled-components'
+import { Button, Upload } from "antd";
+import { RcFile } from "antd/es/upload";
+import React from "react";
+import { RotateLoader } from "react-spinners";
 
 const LoadProfile: React.FC<{
-  onFileChange?: (file: RcFile) => void
-}> = ({ onFileChange }) => {
-  const [file, setFile] = React.useState<RcFile>()
-
+  onFileChange?: (file: RcFile) => void;
+  loading?: boolean;
+}> = ({ onFileChange, loading }) => {
   return (
-    <LoadProfileCard
-      bordered
-      title="Load Profile"
-      extra={
-        <Upload
-          showUploadList={false}
-          beforeUpload={(file) => {
-            console.log('selected file', file)
-            setFile(file)
-            onFileChange?.(file)
-          }}
-        >
-          <SelectFileLink>Select...</SelectFileLink>
-        </Upload>
-      }
+    <Upload
+      showUploadList={false}
+      beforeUpload={(file) => {
+        console.log("selected file", file);
+        onFileChange?.(file);
+      }}
     >
-      {file && (
-        <SelectedFile layout="horizontal">
-          <Descriptions.Item label="File Name">{file.name}</Descriptions.Item>
-          <Descriptions.Item label="File Size">{file.size}</Descriptions.Item>
-          <Descriptions.Item label="Last Modified">{new Date(file.lastModified).toLocaleString()}</Descriptions.Item>
-        </SelectedFile>
-      )}
-    </LoadProfileCard>
-  )
-}
+      <Button
+        type="primary"
+        size="large"
+        style={{
+          width: "150px",
+          height: "80px",
+        }}
+      >
+        {loading ? (
+          <RotateLoader color="white" />
+        ) : (
+          <span
+            style={{
+              fontSize: "28px",
+              fontWeight: "bold",
+            }}
+          >
+            Open
+          </span>
+        )}
+      </Button>
+    </Upload>
+  );
+};
 
-export default LoadProfile
-
-const LoadProfileCard = styled(Card)`
-  padding: 10px;
-  cursor: pointer;
-  user-select: none;
-`
-
-const SelectFileLink = styled.span`
-  color: blue;
-`
-
-const SelectedFile = styled(Descriptions)`
-  td {
-    padding-bottom: 0 !important;
-  }
-`
+export default LoadProfile;

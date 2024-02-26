@@ -2,62 +2,69 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Table, theme } from 'antd'
 import type { TableProps } from 'antd'
 import classNames from 'classnames'
-import ResizeObserver from 'rc-resize-observer'
-import { VariableSizeGrid as Grid } from 'react-window'
-import { Inspector } from 'react-inspector'
-import { ColumnType } from 'antd/es/table'
-import dayjs from 'dayjs'
-import styled from 'styled-components'
+import { VariableSizeGrid as Grid } from "react-window";
+import { ColumnType } from "antd/es/table";
+import dayjs from "dayjs";
+import styled from "styled-components";
+import { useMeasure, useWindowSize } from "react-use";
 
-const VirtualTable = <RecordType extends { time: number }>(props: TableProps<RecordType>) => {
-  const { columns, scroll } = props
-  const [tableWidth, setTableWidth] = useState(0)
-  const { token } = theme.useToken()
+const VirtualTable = <RecordType extends { time: number }>(
+  props: TableProps<RecordType> & {
+    onRowClick?: (record: RecordType) => void;
+  }
+) => {
+  const { columns, scroll, onRowClick } = props;
+  const { token } = theme.useToken();
+  const { width: tableWidth } = useWindowSize();
+  const [selectedRowIndex, setSelectedRowIndex] = useState<number>(0);
 
-  const widthColumnCount = columns!.filter(({ width }) => !width).length
+  const widthColumnCount = columns!.filter(({ width }) => !width).length;
   const mergedColumns = columns!.map((column) => {
     if (column.width) {
-      return column
+      return column;
     }
 
     return {
       ...column,
       width: Math.floor(tableWidth / widthColumnCount),
-    }
-  })
+    };
+  });
 
-  const gridRef = useRef<any>()
+  const gridRef = useRef<any>();
   const [connectObject] = useState<any>(() => {
-    const obj = {}
-    Object.defineProperty(obj, 'scrollLeft', {
+    const obj = {};
+    Object.defineProperty(obj, "scrollLeft", {
       get: () => {
         if (gridRef.current) {
-          return gridRef.current?.state?.scrollLeft
+          return gridRef.current?.state?.scrollLeft;
         }
-        return null
+        return null;
       },
       set: (scrollLeft: number) => {
         if (gridRef.current) {
-          gridRef.current.scrollTo({ scrollLeft })
+          gridRef.current.scrollTo({ scrollLeft });
         }
       },
-    })
+    });
 
-    return obj
-  })
+    return obj;
+  });
 
   const resetVirtualGrid = () => {
     gridRef.current?.resetAfterIndices({
       columnIndex: 0,
       shouldForceUpdate: true,
-    })
-  }
+    });
+  };
 
-  useEffect(() => resetVirtualGrid, [tableWidth])
+  useEffect(() => resetVirtualGrid, [tableWidth]);
 
-  const renderVirtualList = (rawData: object[], { scrollbarSize, ref, onScroll }: any) => {
-    ref.current = connectObject
-    const totalHeight = rawData.length * 54
+  const renderVirtualList = (
+    rawData: object[],
+    { scrollbarSize, ref, onScroll }: any
+  ) => {
+    ref.current = connectObject;
+    const totalHeight = rawData.length * 54;
 
     return (
       <Grid
@@ -65,10 +72,10 @@ const VirtualTable = <RecordType extends { time: number }>(props: TableProps<Rec
         className="virtual-grid"
         columnCount={mergedColumns.length}
         columnWidth={(index: number) => {
-          const { width } = mergedColumns[index]
+          const { width } = mergedColumns[index];
           return totalHeight > scroll!.y! && index === mergedColumns.length - 1
             ? (width as number) - scrollbarSize - 1
-            : (width as number)
+            : (width as number);
         }}
         height={scroll!.y as number}
         rowCount={rawData.length}
@@ -76,97 +83,119 @@ const VirtualTable = <RecordType extends { time: number }>(props: TableProps<Rec
         rowHeight={() => 54}
         width={tableWidth}
         onScroll={({ scrollLeft }: { scrollLeft: number }) => {
-          onScroll({ scrollLeft })
+          onScroll({ scrollLeft });
         }}
       >
-        {({ columnIndex, rowIndex, style }: { columnIndex: number; rowIndex: number; style: React.CSSProperties }) => {
-          const rawDataItem = rawData[rowIndex] as any
-          const columnData: any = mergedColumns[columnIndex]
+        {({
+          columnIndex,
+          rowIndex,
+          style,
+        }: {
+          columnIndex: number;
+          rowIndex: number;
+          style: React.CSSProperties;
+        }) => {
+          const rawDataItem = rawData[rowIndex] as any;
+          const columnData: any = mergedColumns[columnIndex];
           return (
             <div
-              className={classNames('virtual-table-cell', {
-                'virtual-table-cell-last': columnIndex === mergedColumns.length - 1,
+              className={classNames("virtual-table-cell", {
+                "virtual-table-cell-last":
+                  columnIndex === mergedColumns.length - 1,
               })}
+              onClick={() => {
+                onRowClick?.(rawDataItem);
+                setSelectedRowIndex(rowIndex);
+              }}
               style={{
                 ...style,
-                boxSizing: 'border-box',
+                boxSizing: "border-box",
                 padding: token.padding,
                 borderBottom: `${token.lineWidth}px ${token.lineType} ${token.colorSplit}`,
-                background: token.colorBgContainer,
+                background:
+                  selectedRowIndex === rowIndex
+                    ? token.colorBgElevated
+                    : token.colorBgContainer,
               }}
             >
               {columnData.render
-                ? columnData.render(rawDataItem[columnData.dataIndex], rawDataItem, rowIndex)
+                ? columnData.render(
+                    rawDataItem[columnData.dataIndex],
+                    rawDataItem,
+                    rowIndex
+                  )
                 : rawDataItem[columnData.dataIndex]}
             </div>
-          )
+          );
         }}
       </Grid>
-    )
-  }
+    );
+  };
 
   return (
-    <ResizeObserver
-      onResize={({ width }) => {
-        setTableWidth(width)
+    <Table
+      {...props}
+      size="small"
+      className="virtual-table"
+      columns={mergedColumns}
+      pagination={false}
+      components={{
+        // @ts-ignore
+        body: renderVirtualList,
       }}
-    >
-      <Table
-        {...props}
-        size="small"
-        className="virtual-table"
-        columns={mergedColumns}
-        pagination={false}
-        // components={{
-        //   // @ts-ignore
-        //   body: renderVirtualList,
-        // }}
-      />
-    </ResizeObserver>
-  )
-}
+    />
+  );
+};
 
-const Console = <RecordType extends { time: number }>({ data }: { data: RecordType[] }) => {
+const Console = <RecordType extends { time: number }>({
+  data,
+  onRowClick,
+}: {
+  data: RecordType[];
+  onRowClick?: (record: RecordType) => void;
+}) => {
   // Usage
   const columns: ColumnType<RecordType>[] = [
     {
-      title: 'Time',
-      dataIndex: 'time',
+      title: "Time",
+      dataIndex: "time",
       width: 200,
       sorter: (a, b) => a.time - b.time,
+      sortOrder: "descend",
       render: (value, record, index) => {
-        return dayjs(value).format('DD, MMM HH:mm:ss.SSS')
+        return dayjs(value).format("DD, MMM HH:mm:ss.SSS");
       },
     },
-    { title: 'Text', dataIndex: 'msg' },
-    {
-      title: 'payload',
-      dataIndex: 'payload',
-      render(value, record, index) {
-        return (
-          <InspectorItem>
-            <Inspector data={value} table={false} />
-          </InspectorItem>
-        )
-      },
-    },
-    // { title: 'F', dataIndex: 'key', width: 100 },
-  ]
+    { title: "Message", dataIndex: "msg" },
+  ];
+
+  const [tableAreaRef, { height: tableHeight }] = useMeasure();
 
   return (
-    <div style={{ flex: 1 }}>
+    <div
+      // @ts-ignore
+      ref={tableAreaRef}
+      style={{
+        flex: 1,
+        flexShrink: 0,
+        overflowY: "hidden",
+      }}
+    >
       <VirtualTable
+        bordered
+        size="small"
         columns={columns}
         dataSource={data}
+        onRowClick={onRowClick}
         scroll={{
-          x: '100vw',
-          y: 'calc(100vh - 400px)',
+          x: "100vw",
+          y: tableHeight,
           scrollToFirstRowOnChange: true,
         }}
       />
     </div>
-  )
-}
+  );
+};
 
 export default Console
 

@@ -1,42 +1,21 @@
-import { Button, Card } from 'antd'
-import TextArea from 'antd/es/input/TextArea'
-import React from 'react'
-import styled from 'styled-components'
+import TextArea from "antd/es/input/TextArea";
+import React from "react";
 
 const Filter: React.FC<{
-  value: string
-  onChange?: (value: string) => void
+  value: string;
+  onChange?: (value: string) => void;
 }> = ({ value, onChange }) => {
   return (
-    <FilterCard>
-      <div>
-        <QuickInsertButton text="include:" onClick={(insert) => onChange?.((value.trim() + insert).trim())} />
-        <QuickInsertButton text="exclude:" onClick={(insert) => onChange?.((value.trim() + insert).trim())} />
-      </div>
-      <TextArea
-        value={value}
-        onChange={(e) => onChange?.(e.target.value)}
-        placeholder="search with include:, exclude:, and text, separate with newline."
-        rows={3}
-      />
-    </FilterCard>
-  )
-}
-
-export default Filter
-
-const QuickInsertButton = ({ text, onClick }: { text: string; onClick?: (key: string) => void }) => {
-  return (
-    <Button
-      size="small"
-      type="link"
-      onClick={() => {
-        onClick?.('\n' + text)
+    <TextArea
+      value={value}
+      onChange={(e) => onChange?.(e.target.value)}
+      placeholder="condition1 with comma, separate matches with newline."
+      rows={3}
+      style={{
+        resize: "none",
       }}
-    >
-      {text}
-    </Button>
-  )
-}
+    />
+  );
+};
 
-const FilterCard = styled(Card)``
+export default Filter;

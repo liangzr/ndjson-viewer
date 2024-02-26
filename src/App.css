@@ -3,8 +3,8 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  min-height: 100vh;
-  background-color: rgb(240, 242, 245);
+  height: 100vh;
+  background-color: black;
   padding: 20px;
   box-sizing: border-box;
 }

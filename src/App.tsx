@@ -14,6 +14,7 @@ interface LogEvent extends Record<string, any> {
 
 function App() {
   const [logs, setLogs] = useState<LogEvent[]>([]);
+  const [periodLogs, setPeriodLogs] = useState<LogEvent[]>([]);
   const [filteredLogs, setFilteredLogs] = useState<LogEvent[]>([]);
   const [searchText, setSearchText] = useState<string>("");
   const [selectedLog, setSelectedLog] = useState<LogEvent | null>(null);
@@ -51,17 +52,27 @@ function App() {
 
   useDebounce(
     () => {
-      const validLogs = logs.filter(
-        (log) => log.time >= range[0] && log.time <= range[1]
-      );
+      if (logs.length > 0) {
+        const validLogs = logs.filter(
+          (log) => log.time >= range[0] && log.time <= range[1]
+        );
+        setPeriodLogs(validLogs);
+      }
+    },
+    500,
+    [range]
+  );
 
+  useDebounce(
+    () => {
       if (!searchText) {
         setLoading(false);
         startTransition(() => {
-          setFilteredLogs(validLogs);
+          setFilteredLogs(periodLogs);
         });
         return;
       }
+
       const lines = searchText.split("\n");
       const texts = lines
         .filter((line) => !line.startsWith("//"))
@@ -72,7 +83,7 @@ function App() {
             .filter(Boolean)
         );
 
-      const result = validLogs.filter((log) => {
+      const result = periodLogs.filter((log) => {
         const logString = JSON.stringify(log).toLowerCase();
 
         if (
@@ -92,8 +103,8 @@ function App() {
         setFilteredLogs(result);
       });
     },
-    1000,
-    [logs, searchText, range]
+    500,
+    [periodLogs, searchText, range]
   );
 
   return (
